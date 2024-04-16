@@ -2,7 +2,9 @@
 #include <string>
 #include <map>
 #include <vector>
-
+#include <limits> // Needed for std::numeric_limits
+#include <cstdlib> // For rand() function
+#include <ctime> // For seeding the random number generator
 
 // Player section
 
@@ -33,7 +35,7 @@ public:
     // Method to calculate player's health based on level and total XP
     int calculateMaxHealth() const {
         // Example logic: health increases by 5 with each level
-        int calculatedMaxHealth = maxHealth + level * 5;
+        int calculatedMaxHealth = maxHealth + 5;
         std::cout << "Calculated Max Health: " << calculatedMaxHealth << std::endl; // Debugging output
         return calculatedMaxHealth;
     }
@@ -45,13 +47,6 @@ public:
         health = newHealth;
     }
 
-    // // Method to set player's totalXP
-    // void updateTotalXP(int amount) {
-    //     // Add any necessary validation logic here
-    //     totalXP += amount;
-    //     std::cout << "Setting totalXP to: " << totalXP << std::endl; // Debugging output
-    // }
-
     // Method to set player's xpRequiredToNextLevel
     void setXpRequiredToNextLevel(double multiplier) {
         xpRequiredToNextLevel = static_cast<int>(xpRequiredToNextLevel*multiplier); // Cast to int to truncate the decimal part
@@ -61,7 +56,7 @@ public:
     // Method to calculate player's attack based on level and total XP
     int calculateAttack() const {
         // Example logic: attack increases by 1 with each level
-        return attack + level * 1;
+        return attack + 1;
     }
 
     // Method to gain XP
@@ -73,6 +68,7 @@ public:
             setXpRequiredToNextLevel(1.25);
             std::cout << "LEVEL UP! You are now level " << level << std::endl; // Debugging output
             attack = calculateAttack();
+            std::cout << "Your attack is now: " << getAttack() << "\n";
             maxHealth = calculateMaxHealth();
         }
     }
@@ -103,8 +99,73 @@ struct Room {
 
 
 // Game Engine Section:
+void waitForKeypress() {
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear input buffer
+    std::cin.get(); // Wait for a keypress
+}
 
 // Battle Engine Definition
+void playerTurn(Player& player, Monster& monster){
+    // Player's turn
+    std::cout << "\nPlayer's turn:\n";
+    std::cout << "What do you want to do?\n";
+    std::cout << "1. Basic Attack\n";
+    std::cout << "2. Wild Attack!\n";
+    int userInput;
+
+    // Loops until a valid numeric input is provided
+    while (!(std::cin >> userInput) || (userInput != 1 && userInput != 2)){
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
+        std::cout << "Invalid input. Please enter a number: ";
+    }
+
+    if (userInput == 1){
+        //Player attacks
+        std::cout << "Player attacks!\n";
+        monster.health -= player.getAttack();
+        std::cout << "You deal good damage to " << monster.name << ".\n";
+    }
+    else if (userInput == 2){
+        // Player attacks with a risky attack, 70% chance to deal less damage, 30% chance to deal bonus damage
+        std::cout << "Player launches a risky powerful attack!\n";
+
+        int randomNumber = rand() % 100;
+
+        // Risky attack fails and deals reduced damage
+        if (randomNumber < 65){
+            int damage = static_cast<int>(player.getAttack()*0.5);
+            if (damage < 1){
+                damage = 1;
+            }
+            monster.health -= damage;
+            std::cout << "Player almost misses and deals poor damage to " << monster.name << ".\n";
+        }
+        // Risky attack succeeds and deals bonus damage
+        else{
+            int damage = static_cast<int>(player.getAttack()*2);
+            monster.health -= damage;
+            std::cout << "Player deals massive damage to " << monster.name << "!\n";        
+        }
+    }
+}
+
+void monsterTurn(Player& player, Monster& monster){
+    // Monster's turn
+    std::cout << "\nMonster's turn:\n";
+    std::cout << "Monster attacks!\n";
+    std::cout << "Player health before attack: " << player.getHealth() << "\n"; // Debugging output
+    player.setHealth(player.getHealth() - monster.attack); // Update player's health using setHealth method
+    std::cout << "Player health after attack: " << player.getHealth() << "\n"; // Debugging output
+    if (player.getHealth() <= 0) {
+        // Player defeated
+        std::cout << "Game over! You have been defeated. Your journey ends here...\n";
+        std::cout << "Press any key to exit the game.";
+        waitForKeypress();
+        exit(0); // End the game if player loses all their health
+    }
+}
+
 void battleLogic(Player& player, Monster& monster, int currentRoomID) {
     // Display initial battle message
     std::cout << "A battle begins!\n";
@@ -113,39 +174,17 @@ void battleLogic(Player& player, Monster& monster, int currentRoomID) {
     // Battle loop
     while (true) {
         // Player's turn
-        std::cout << "\nPlayer's turn:\n";
-        std::cout << "What do you want to do?\n";
-        std::cout << "1. Attack\n";
-        int userInput;
-        std::cin >> userInput;
+        playerTurn(player, monster);
 
-        if (userInput == 1) {
-            // Player attacks
-            std::cout << "Player attacks!\n";
-            monster.health -= player.getAttack();
-            std::cout << "Monster health: " << monster.health << "\n";
-            if (monster.health <= 0) {
-                // Monster defeated
-                std::cout << "You defeated the monster!\n";
-                // No need to return anything here
-                return;
-            }
-        } else {
-            std::cout << "Invalid action. Please try again.\n";
-            continue;
+        if (monster.health <= 0) {
+            // Monster is defeated
+            std::cout << "You defeated the monster!\n";
+            // Break out of battleLogic if monster is defeated
+            return;
         }
 
-        // Monster's turn
-        std::cout << "\nMonster's turn:\n";
-        std::cout << "Monster attacks!\n";
-        std::cout << "Player health before attack: " << player.getHealth() << "\n"; // Debugging output
-        player.setHealth(player.getHealth() - monster.attack); // Update player's health using setHealth method
-        std::cout << "Player health after attack: " << player.getHealth() << "\n"; // Debugging output
-        if (player.getHealth() <= 0) {
-            // Player defeated
-            std::cout << "Game over! You have been defeated.\n";
-            exit(0); // End the game
-        }
+        //Monster's turn
+        monsterTurn(player, monster);
     }
 }
 
@@ -155,7 +194,7 @@ void battleLogic(Player& player, Monster& monster, int currentRoomID) {
 
 int main() {
     // Create player object
-    Player player(2, 1, 100, 100, 0); // Initial player stats (Attack, level, maxHealth, health, totalXP)
+    Player player(2, 1, 25, 25, 0); // Initial player stats (Attack, level, maxHealth, health, totalXP)
 
     // Define rooms
     std::vector<Room> rooms = {
@@ -163,7 +202,7 @@ int main() {
         // Room 0: Start room
         {
             0,
-            "Welcome. You wake up and look around. You are in a dimly lit corridor. What do you want to do?",
+            "Welcome. You wake up and look around. You are in a dimly lit corridor. \nWhat do you want to do?",
             {{"Go east", 1}}, // Possible action: Go east to room 1
             0, // No XP gain
             {} // No monsters
@@ -172,7 +211,7 @@ int main() {
         // Room 1: Room with a monster
         {
             1,
-            "You enter a large chamber. A fearsome dragon blocks your path!",
+            "You enter a large chamber. A baby dragon blocks your path!",
             {{"Fight the dragon", 2}, {"Flee", 0}}, // Possible actions: Fight the dragon (go to room 2), or flee (go back to room 0)
             0, // No XP gain
             {{"Baby Dragon", 10, 1, "You defeat the dragon and gain 100 XP!", 100, 2}} // Monster details: Name, health, attack, description, XP reward, next room ID
@@ -199,6 +238,7 @@ int main() {
 
     // Game loop
     int currentRoomID = 0; // Start in the first room
+    std::cout << "\n" << std::endl;
     while (true) {
         // Display room description
         std::cout << rooms[currentRoomID].description << std::endl;
@@ -231,18 +271,26 @@ int main() {
             actionNumber++;
         }
 
-        // Get player input and navigate to the next room
-        std::cout << "Enter the number of your action: ";
-        int userInput;
-        std::cin >> userInput;
+        // // Get player input and navigate to the next room
+        // std::cout << "Enter the number of your action: ";
+        // int userInput;
 
-        // Process player input and update currentRoomID
-        if (userInput >= 1 && userInput <= rooms[currentRoomID].actions.size()) {
-            auto it = rooms[currentRoomID].actions.begin(); // it = iterator to select correct action
-            std::advance(it, userInput - 1); // Move iterator to the selected action
-            currentRoomID = it->second; // associates current room ID with the ID of the next room to navigate to
-        } else {
-            std::cout << "Invalid action number. Please try again.\n";
+
+        int userInput;
+
+        while (true){
+            std::cout << "Enter the number of your action: ";
+            if (!(std::cin >> userInput) || userInput < 1 || userInput > rooms[currentRoomID].actions.size()){
+                std::cout << "Invalid action number. Please try again. ";
+                std::cin.clear(); // Clear error flags
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard invalid input
+            } else{
+                std::cout << "\n";
+                auto it = rooms[currentRoomID].actions.begin(); // it = iterator to select correct action
+                std::advance(it, userInput - 1); // Move iterator to the selected action
+                currentRoomID = it->second; // associated current room ID with the ID of the next room to navigate to
+                break; // Exit the loop if valid input is provided
+            }
         }
 
         // Check for game over conditions, level up, etc.
