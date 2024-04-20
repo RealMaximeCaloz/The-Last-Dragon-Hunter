@@ -1,21 +1,29 @@
-# Text-Based Adventure Game Engine (used to create The Last Dragon Hunter)
+# Text-Based Adventure Game Engine + Game: The Last Dragon Hunter
 
 # Project Overview
 This project was made with C++ and the MSYS2 compiler.
 
 This project is a game engine that allows users to create text-based adventure games.
+
 The game engine allows players to interact with a text-based UI in order to progress through an adventure as the main character.
+
 The player can navigate to different rooms and areas, and their choices dictate how the game plays out.
+
 The game engine also comes coded with a battle engine, allowing for thrilling battle encounters with foes.
+
 As the player accumulates victories, they will level up, resulting in strengthened personal attributes.
 
-A game has also been created with this game engine. The game is called The Last Dragon Hunter and follows the story of a 220 year old dragon hunter, left alone to fend off organized attacks by the repopulating dragons.
+A game has also been created with this game engine. 
+
+The game is called The Last Dragon Hunter and follows the story of a 220 year old dragon hunter, left alone to fend off organized attacks by the repopulating dragons.
 
 Down below, you can see a screenshot of the game and game engine in action:
 ![game](https://github.com/RealMaximeCaloz/Portfolio/blob/4692cc69ce89ab5b3396e04c3d928a71023e3056/the_last_dragon_hunter_gameplay_screenshot.png)
 
-The game engine works as follows.
+The game engine works as follows:
+
 There is a main loop in mygame.cpp which handles all the logic for displaying the text descriptions of each room, and the navigation between each room.
+
 If the player enters a room where there is an enemy encounter defined, the Battle Engine will activate and handle the logic for the player and the foe taking turns dealing damage to each other.
 
 In the rooms.cpp file, there is a list of all the rooms the player can potentially enter during gameplay. Each room leads to one or more other rooms, depending on player input.
@@ -32,10 +40,15 @@ Each room is defined with the following structure:
 ```
 
 The roomID is an integer allowing easy referencing to a specific room.
+
 The String Description is what is displayed on the UI whenever the player enters a given room.
+
 The Strings representing choices are usually displayed after the description, before user input is requested.
+
 An XP gain integer is defined (usually as 0) in case the player finds some sort of special item (e.g. a potion) that would grant them extra XP upon room entry.
+
 A Monster struct is defined within the rooms with an enemy encounter.
+
 
 The infrastructure mentionned above allows text-based adventure game creators a flexible and relatively simple development experience, comprehensible even for non-developers.
 
