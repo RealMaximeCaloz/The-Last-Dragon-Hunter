@@ -50,7 +50,7 @@ An XP gain integer is defined (usually as 0) in case the player finds some sort 
 A Monster struct is defined within the rooms with an enemy encounter.
 
 
-The infrastructure mentionned above allows text-based adventure game creators a flexible and relatively simple development experience, comprehensible even for non-developers.
+The infrastructure mentionned above offers text-based adventure game creators a flexible and relatively simple development experience, comprehensible even for non-developers.
 
 # Installation
 1. Clone this repository:
